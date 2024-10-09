@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1728485990 source:c:\users\asus\documents\code-wizards\fantasycharacter\main.cpp
+	<fstream>
+	<iostream>
+	<map>
+	<regex>
+	<string>
+	<vector>
+
