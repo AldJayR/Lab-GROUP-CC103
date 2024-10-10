@@ -19,10 +19,9 @@ struct Character
 };
 
 const string FILENAME = "characters.txt";
-const string ID_FILENAME = "last_id.txt";
 
 int get_int(const string& prompt);
-int generate_unique_id();
+int generate_unique_id(const map<int, Character>& characterMap);
 void saveAllCharactersToFile(const vector<Character>& characters);
 void loadCharactersFromFile(vector<Character>& characters, map<int, Character>& characterMap);
 void updateCharacter(vector<Character>& characters, map<int, Character>& characterMap);
