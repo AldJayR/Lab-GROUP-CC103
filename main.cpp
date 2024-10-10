@@ -1,9 +1,11 @@
-#include <fstream>
 #include <iostream>
 #include <map>
 #include <regex>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
@@ -21,7 +23,7 @@ const string ID_FILENAME = "last_id.txt";
 
 int get_int(const string& prompt);
 int generate_unique_id();
-void saveCharacterToFile(const Character& character);
+void saveAllCharactersToFile(const vector<Character>& characters);
 void loadCharactersFromFile(vector<Character>& characters, map<int, Character>& characterMap);
 void updateCharacter(vector<Character>& characters, map<int, Character>& characterMap);
 void deleteCharacter(vector<Character>& characters, map<int, Character>& characterMap);
@@ -45,8 +47,9 @@ int main()
         cout << "1. Create Character" << '\n';
         cout << "2. Search for a Character" << '\n';
         cout << "3. Display all Characters" << '\n';
-        cout << "4. Delete a character" << '\n';
-        cout << "5. Exit" << '\n';
+        cout << "4. Update a character" << '\n';
+        cout << "5. Delete a character" << '\n';
+        cout << "6. Exit" << '\n';
 
         choice = get_int("\n>> ");
 
@@ -65,9 +68,12 @@ int main()
                 displayAllCharacters(characters);
                 break;
             case 4:
-                deleteCharacter(characters, characterMap);
+                updateCharacter(characters, characterMap);
                 break;
             case 5:
+                deleteCharacter(characters, characterMap);
+                break;
+            case 6:
                 cout << "Exiting the program.\n";
                 return 0;
             default:
@@ -77,7 +83,8 @@ int main()
         cin.get();
         system("CLS");
 
-    } while (choice != 5);
+    }
+    while (choice != 6);
 
     return 0;
 }
@@ -110,39 +117,34 @@ int get_int(const string& prompt)
     }
 }
 
-int generate_unique_id()
+int generate_unique_id(const map<int, Character>& characterMap)
 {
-    int last_id = 0;
+    srand(time(0));
+    int id;
 
-    ifstream idFile(ID_FILENAME);
-    if (idFile)
+    do
     {
-        idFile >> last_id;
-        idFile.close();
+        id = rand() % 9000 + 1000;
     }
+    while (characterMap.find(id) != characterMap.end());
 
-    last_id++;
-
-    ofstream outFile(ID_FILENAME);
-    if (outFile)
-    {
-        outFile << last_id;
-        outFile.close();
-    }
-    return last_id;
+    return id;
 }
 
-void saveCharacterToFile(const Character& character)
+void saveAllCharactersToFile(const vector<Character>& characters)
 {
-    ofstream outFile(FILENAME, ios::app);
+    ofstream outFile(FILENAME, ios::trunc);
     if (outFile)
     {
-        outFile << "id: " << character.id << '\n'
-                << "name: " << character.name << '\n'
-                << "level: " << character.level << '\n'
-                << "maxHealth: " << character.maxHealth << '\n'
-                << "strength: " << character.strength << '\n'
-                << "---\n";
+        for (const auto& character : characters)
+        {
+            outFile << "id: " << character.id << '\n'
+                    << "name: " << character.name << '\n'
+                    << "level: " << character.level << '\n'
+                    << "maxHealth: " << character.maxHealth << '\n'
+                    << "strength: " << character.strength << '\n'
+                    << "---\n";
+        }
         outFile.close();
     }
     else
@@ -201,11 +203,6 @@ void loadCharactersFromFile(vector<Character>& characters, map<int, Character>& 
             }
         }
 
-        if (character.id != 0)
-        {
-            characters.push_back(character);
-            characterMap[character.id] = character;
-        }
         inFile.close();
     }
     else
@@ -230,49 +227,40 @@ void updateCharacter(vector<Character>& characters, map<int, Character>& charact
 
         string newName;
         cout << "Enter new name (leave blank to keep current): ";
-        getline(cin >> ws, newName);
+        getline(cin, newName);
         if (!newName.empty())
         {
             character.name = newName;
         }
 
-        character.level = get_int("Enter new level (keep current if 0): ");
-        if (character.level <= 0)
+        int newLevel = get_int("Enter new level (keep current if 0): ");
+        if (newLevel > 0)
         {
-            character.level = character.level; // No change
+            character.level = newLevel;
         }
 
-        character.maxHealth = get_int("Enter new max health (keep current if 0): ");
-        if (character.maxHealth <= 0)
+        int newMaxHealth = get_int("Enter new max health (keep current if 0): ");
+        if (newMaxHealth > 0)
         {
-            character.maxHealth = character.maxHealth;
+            character.maxHealth = newMaxHealth;
         }
 
-        character.strength = get_int("Enter new strength (keep current if 0): ");
-        if (character.strength <= 0)
+        int newStrength = get_int("Enter new strength (keep current if 0): ");
+        if (newStrength > 0)
         {
-            character.strength = character.strength;
+            character.strength = newStrength;
         }
 
-        ofstream outFile(FILENAME);
-        if (outFile)
+        for (auto& chara : characters)
         {
-            for (const auto& chara : characters)
+            if (chara.id == character.id)
             {
-                outFile << "id: " << chara.id << '\n'
-                        << "name: " << chara.name << '\n'
-                        << "level: " << chara.level << '\n'
-                        << "maxHealth: " << chara.maxHealth << '\n'
-                        << "strength: " << chara.strength << '\n'
-                        << "---\n";
+                chara = character;
+                break;
             }
-            outFile.close();
-            cout << "Character updated successfully.\n";
         }
-        else
-        {
-            cout << "Error opening file for writing.\n";
-        }
+
+        saveAllCharactersToFile(characters);
     }
     else
     {
@@ -280,8 +268,11 @@ void updateCharacter(vector<Character>& characters, map<int, Character>& charact
     }
 }
 
+
 void deleteCharacter(vector<Character>& characters, map<int, Character>& characterMap)
 {
+    displayAllCharacters(characters);
+
     int id = get_int("Enter the ID of the character to delete: ");
     auto it = characterMap.find(id);
 
@@ -293,25 +284,7 @@ void deleteCharacter(vector<Character>& characters, map<int, Character>& charact
 
         characterMap.erase(it);
 
-        ofstream outFile(FILENAME);
-        if (outFile)
-        {
-            for (const auto& chara : characters)
-            {
-                outFile << "id: " << chara.id << '\n'
-                        << "name: " << chara.name << '\n'
-                        << "level: " << chara.level << '\n'
-                        << "maxHealth: " << chara.maxHealth << '\n'
-                        << "strength: " << chara.strength << '\n'
-                        << "---\n";
-            }
-            outFile.close();
-            cout << "Character with ID " << id << " deleted successfully.\n";
-        }
-        else
-        {
-            cout << "Error opening file for writing.\n";
-        }
+        saveAllCharactersToFile(characters);
     }
     else
     {
@@ -329,12 +302,12 @@ void createCharacter(vector<Character>& characters, map<int, Character>& charact
     newCharacter.level = get_int("Enter base level: ");
     newCharacter.maxHealth = get_int("Enter max health: ");
     newCharacter.strength = get_int("Enter base strength: ");
-    newCharacter.id = generate_unique_id();
-
-    saveCharacterToFile(newCharacter);
+    newCharacter.id = generate_unique_id(characterMap);
 
     characters.push_back(newCharacter);
     characterMap[newCharacter.id] = newCharacter;
+
+    saveAllCharactersToFile(characters);
 
     cout << "Character created successfully with ID: " << newCharacter.id << '\n';
 }

@@ -1,9 +1,11 @@
 # depslib dependency file v1.0
-1728485990 source:c:\users\asus\documents\code-wizards\fantasycharacter\main.cpp
-	<fstream>
+1728537071 source:c:\users\asus\documents\code-wizards\fantasycharacter\main.cpp
 	<iostream>
 	<map>
 	<regex>
 	<string>
 	<vector>
+	<fstream>
+	<cstdlib>
+	<ctime>
 
