@@ -21,13 +21,14 @@ struct Character
 const string FILENAME = "characters.txt";
 
 int get_int(const string& prompt);
+string to_lowercase(const string& str);
 int generate_unique_id(const map<int, Character>& characterMap);
 void saveAllCharactersToFile(const vector<Character>& characters);
 void loadCharactersFromFile(vector<Character>& characters, map<int, Character>& characterMap);
 void updateCharacter(vector<Character>& characters, map<int, Character>& characterMap);
 void deleteCharacter(vector<Character>& characters, map<int, Character>& characterMap);
 void createCharacter(vector<Character>& characters, map<int, Character>& characterMap);
-void displayCharacterById(const map<int, Character>& characterMap, int id);
+void displayCharacterByName(const map<int, Character>& characterMap);
 void displayAllCharacters(const vector<Character>& characters);
 
 int main()
@@ -58,11 +59,8 @@ int main()
                 createCharacter(characters, characterMap);
                 break;
             case 2:
-            {
-                int id = get_int("Enter ID of Character: ");
-                displayCharacterById(characterMap, id);
-            }
-            break;
+                displayCharacterByName(characterMap);
+                break;
             case 3:
                 displayAllCharacters(characters);
                 break;
@@ -78,7 +76,7 @@ int main()
             default:
                 cout << "Invalid input. Please try again.\n";
         }
-        cout << "Enter any key to continue...";
+        cout << "\nEnter any key to continue...";
         cin.get();
         system("CLS");
 
@@ -114,6 +112,16 @@ int get_int(const string& prompt)
             cout << "Invalid input. Please enter a valid integer.\n";
         }
     }
+}
+
+string to_lowercase(const string& str)
+{
+    string lower_str = str;
+    for (char& c : lower_str)
+    {
+        c = tolower(c);
+    }
+    return lower_str;
 }
 
 int generate_unique_id(const map<int, Character>& characterMap)
@@ -273,6 +281,15 @@ void deleteCharacter(vector<Character>& characters, map<int, Character>& charact
     displayAllCharacters(characters);
 
     int id = get_int("Enter the ID of the character to delete: ");
+    cout << "Are you sure you want to delete this character? (Y/N) ";
+    char prompt;
+    cin >> prompt;
+
+    if (toupper(prompt) == 'N')
+    {
+        return;
+    }
+
     auto it = characterMap.find(id);
 
     if (it != characterMap.end())
@@ -284,6 +301,9 @@ void deleteCharacter(vector<Character>& characters, map<int, Character>& charact
         characterMap.erase(it);
 
         saveAllCharactersToFile(characters);
+
+        cout << "Character deleted successfully." << '\n';
+        cin.get();
     }
     else
     {
@@ -311,22 +331,33 @@ void createCharacter(vector<Character>& characters, map<int, Character>& charact
     cout << "Character created successfully with ID: " << newCharacter.id << '\n';
 }
 
-void displayCharacterById(const map<int, Character>& characterMap, int id)
+void displayCharacterByName(const map<int, Character>& characterMap)
 {
-    auto it = characterMap.find(id);
-    if (it != characterMap.end())
+    string name;
+    cout << "Enter name of Character: ";
+    getline(cin >> ws, name);
+
+    string lowerName = to_lowercase(name);
+    bool found = false;
+
+    for (const auto& pair : characterMap)
     {
-        const Character& character = it->second;
-        cout << "Character Details: \n"
-             << "ID: " << character.id << "\n"
-             << "Name: " << character.name << "\n"
-             << "Level: " << character.level << "\n"
-             << "Max Health: " << character.maxHealth << "\n"
-             << "Strength: " << character.strength << "\n";
+        const Character& character = pair.second;
+        if (to_lowercase(character.name) == lowerName) // Compare lowercase names
+        {
+            cout << "Character Details: \n"
+                 << "ID: " << character.id << "\n"
+                 << "Name: " << character.name << "\n"
+                 << "Level: " << character.level << "\n"
+                 << "Max Health: " << character.maxHealth << "\n"
+                 << "Strength: " << character.strength << "\n";
+            found = true;
+        }
     }
-    else
+
+    if (!found)
     {
-        cout << "Character with ID " << id << " not found.\n";
+        cout << "Character with name \"" << name << "\" not found.\n";
     }
 }
 

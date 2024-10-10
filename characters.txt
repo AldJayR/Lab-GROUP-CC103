@@ -1,6 +1,0 @@
-id: 2312
-name: Enigma
-level: 500
-maxHealth: 50000
-strength: 2000
----
